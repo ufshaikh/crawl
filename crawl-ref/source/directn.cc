@@ -790,23 +790,32 @@ void full_describe_view()
         return;
     }
 
-    coord_def target = _full_describe_menu(list_mons, list_items,
-                                           list_features, "target/travel");
+    bool should_keep_looking;
+    do
+    {
+      coord_def target = _full_describe_menu(list_mons, list_items,
+                                             list_features, "target/travel");
 
-    // need to do this after the menu has been closed on console,
-    // since do_look_around() runs its own loop
-    if (target != coord_def(-1, -1))
-        do_look_around(target);
+      // need to do this after the menu has been closed on console,
+      // since do_look_around() runs its own loop
+      if (target == coord_def(-1, -1))
+          should_keep_looking = false;
+      else
+          should_keep_looking = !do_look_around(target);
+    }
+    while (should_keep_looking);
 }
 
-void do_look_around(const coord_def &whence)
+bool do_look_around(const coord_def &whence)
 {
     dist lmove = _look_around_target(you.pos() + whence);
     if (lmove.isValid && lmove.isTarget && !lmove.isCancel
         && !crawl_state.arena_suspended)
     {
         start_travel(lmove.target);
+        return true;
     }
+    return false;
 }
 
 bool get_look_position(coord_def *c)
